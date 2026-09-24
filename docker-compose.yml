@@ -1,0 +1,11 @@
+services:
+  assisssh:
+    build: .
+    container_name: assisssh
+    restart: unless-stopped
+    ports:
+      - "5050:5050"
+    env_file:
+      - .env
+    volumes:
+      - ./sessions:/app/sessions
