@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=1,14,24&height=220&section=header&text=AssisSSH%20%E2%9A%A1&fontSize=62&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=Autonomous%20AI%20DevOps%20Engineer%20%26%20Intelligent%20SSH%20Terminal&descSize=20&descAlignY=62&descColor=00F2FE" width="100%" alt="AssisSSH Header"/>
+  <img src="./assets/banner.svg" width="100%" alt="AssisSSH Banner"/>
 </p>
 
 <p align="center">
@@ -25,22 +25,11 @@
 
 Equipped with a **Multi-Provider Failover Engine**, **Atomic Session Persistence**, and a **Mobile Telegram Companion**, AssisSSH ensures your infrastructure is always monitored, resilient, and responsive.
 
-```
-+-----------------------------------------------------------------------------------------+
-|                                    AssisSSH STUDIO                                      |
-|  [🔗 192.168.1.100:22] [RAM: 34%] [DISK: 18%] [🐳 5 Running]       [📂 Sessions] [⚙️]   |
-+-------------------------------------------------------------+---------------------------+
-|  yy@server:~$ sudo systemctl restart nginx                  |  🤖 AssisSSH Copilot     |
-|  [sudo] password for yy:                                    |  🟢 Gemini 3.5 Flash-Lite |
-|  yy@server:~$ docker ps                                     |                           |
-|  CONTAINER ID   IMAGE      STATUS          PORTS            |  👤 Goal: Fix failing app |
-|  9a1b2c3d4e5f   redis:7    Up 4 hours      6379/tcp         |                           |
-|  f8e7d6c5b4a3   postgres   Up 2 days       5432/tcp         |  ▼ Analysis & Steps (4)   |
-|                                                             |  ✓ Checked error logs     |
-|  💡 Type a Linux command or let AI handle the server...     |  ✓ Cleared stale socket   |
-|  yy@server:~$ _                                             |  ✓ Restarted container    |
-+-------------------------------------------------------------+---------------------------+
-```
+### 🎬 Live Autonomous Workflow Simulation
+
+<p align="center">
+  <img src="./assets/workflow_animation.svg" width="100%" alt="AssisSSH Autonomous Self-Healing Demo" />
+</p>
 
 ---
 
