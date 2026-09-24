@@ -1,0 +1,7 @@
+flask>=3.0
+paramiko>=3.4
+google-genai>=1.0
+python-dotenv>=1.0
+pyTelegramBotAPI>=4.20
+ddgs>=9.0.0
+

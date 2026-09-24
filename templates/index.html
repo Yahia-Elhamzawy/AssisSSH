@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AssisSSH — Autonomous AI DevOps & SSH Copilot ⚡</title>
+    <link rel="stylesheet" href="/static/style.css?v=4.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="theme-obsidian">
+    <div class="app-shell">
+        
+        <!-- ====================================================================
+             TOP COMMAND & STATUS BAR (SLEEK COMPACT NAVBAR - 48PX)
+             ==================================================================== -->
+        <header class="studio-header">
+            <!-- Left: Brand & Connection Status & Mini Metrics -->
+            <div class="header-left-cluster">
+                <div class="studio-brand" title="AssisSSH — AI DevOps Platform">
+                    <div class="brand-logo-glow">⚡</div>
+                    <div class="brand-meta">
+                        <span class="brand-title">AssisSSH</span>
+                        <span class="brand-tag">v3.5</span>
+                    </div>
+                </div>
+
+                <!-- Server Connection Pill -->
+                <div id="connStatusPill" class="conn-pill disconnected" onclick="openConnModal()" title="إعدادات خادم SSH">
+                    <span class="pulse-dot"></span>
+                    <span id="connStatusText">غير متصل</span>
+                    <span class="server-latency-badge" id="serverLatency">-- ms</span>
+                </div>
+
+                <!-- Live Mini-Stat Badges -->
+                <div class="header-gauges" id="headerGauges">
+                    <div class="mini-gauge" title="استهلاك الذاكرة العشوائية RAM">
+                        <span class="gauge-label">RAM</span>
+                        <div class="mini-bar-track">
+                            <div class="mini-bar-fill" id="headerRamFill" style="width: 0%;"></div>
+                        </div>
+                        <span class="gauge-val" id="headerRamVal">--%</span>
+                    </div>
+                    <div class="mini-gauge" title="مساحة القرص الصلب Disk">
+                        <span class="gauge-label">DISK</span>
+                        <div class="mini-bar-track">
+                            <div class="mini-bar-fill disk" id="headerDiskFill" style="width: 0%;"></div>
+                        </div>
+                        <span class="gauge-val" id="headerDiskVal">--%</span>
+                    </div>
+                    <div class="mini-gauge docker-gauge" title="حاويات Docker النشطة">
+                        <span class="gauge-label">🐳</span>
+                        <span class="gauge-val-bold" id="headerDockerVal">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center: Workspace Navigation Tabs (Segmented Control) -->
+            <nav class="studio-tabs-nav">
+                <button class="nav-tab-btn active" id="tabBtnTerminal" onclick="switchView('terminal')">
+                    <span class="tab-icon">💻</span>
+                    <span class="tab-title">التيرمينال والكوبيلوت</span>
+                </button>
+                <button class="nav-tab-btn" id="tabBtnDashboard" onclick="switchView('dashboard')">
+                    <span class="tab-icon">🐳</span>
+                    <span class="tab-title">الحاويات والمراقبة</span>
+                </button>
+                <button class="nav-tab-btn" id="tabBtnAudit" onclick="switchView('audit')">
+                    <span class="tab-icon">📜</span>
+                    <span class="tab-title">سجل التدقيق</span>
+                    <span class="audit-counter-badge" id="auditCounterBadge">0</span>
+                </button>
+                <button class="nav-tab-btn" id="tabBtnSettings" onclick="switchView('settings')">
+                    <span class="tab-icon">⚙️</span>
+                    <span class="tab-title">الإعدادات</span>
+                </button>
+            </nav>
+
+            <!-- Right: Action Controls -->
+            <div class="header-right-cluster">
+                <!-- Web Search Switch Pill -->
+                <button class="hud-btn search-toggle active" id="btnToggleWebSearch" onclick="toggleWebSearch()" title="تبديل البحث في الإنترنت">
+                    <span class="hud-icon" id="headerWebSearchIcon">🌐</span>
+                    <span class="hud-text" id="headerWebSearchText">بحث الويب: شغال</span>
+                </button>
+
+                <!-- New Session Button -->
+                <button class="hud-btn session-btn" id="btnNewSession" onclick="resetWebSession()" title="جلسة جديدة وتصفير السياق">
+                    <span class="hud-icon">🧹</span>
+                    <span class="hud-text">جلسة جديدة</span>
+                    <span class="session-counter-pill" id="sessionPill">#1</span>
+                </button>
+
+                <!-- Command Palette Shortcut (Ctrl+K) -->
+                <button class="hud-btn palette-btn" onclick="openCommandPalette()" title="لوحة الأوامر (Ctrl+K)">
+                    <kbd class="shortcut-kbd">Ctrl+K</kbd>
+                </button>
+
+                <!-- SSH Server Modal Trigger -->
+                <button class="hud-btn connect-btn" onclick="openConnModal()" title="إدارة الاتصال بالسيرفر">
+                    <span class="hud-icon">🔗</span>
+                    <span class="hud-text">السيرفر</span>
+                </button>
+
+                <!-- Emergency Stop Agent -->
+                <button class="hud-btn stop-danger-btn" id="headerStopBtn" onclick="stopAgent()" style="display:none;" title="إيقاف الذكاء الاصطناعي">
+                    <span class="hud-icon">⏹</span>
+                    <span class="hud-text">إيقاف</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- ====================================================================
+             MAIN WORKSPACE STAGE
+             ==================================================================== -->
+        <main class="studio-main-stage">
+            
+            <!-- ================================================================
+                 VIEW 1: AUTHENTIC TERMINAL + AI COPILOT SPLIT
+                 ================================================================ -->
+            <section class="view-panel active" id="viewTerminal">
+                <div class="terminal-copilot-split" id="terminalSplitLayout">
+                    
+                    <!-- LEFT / MAIN: AUTHENTIC MONOSPACE TERMINAL (STRICT LTR) -->
+                    <section class="terminal-stage" dir="ltr">
+                        <div class="terminal-container">
+                            
+                            <!-- Window Chrome Bar -->
+                            <div class="term-chrome-header">
+                                <div class="term-traffic-lights">
+                                    <span class="traffic-dot close" onclick="disconnectSSH()" title="قطع الاتصال"></span>
+                                    <span class="traffic-dot minimize" onclick="clearTerminal()" title="مسح التيرمينال"></span>
+                                    <span class="traffic-dot maximize" onclick="toggleFullscreen()" title="ملء الشاشة"></span>
+                                </div>
+
+                                <div class="term-session-label">
+                                    <span class="terminal-pulse-dot"></span>
+                                    <span id="termTitleHost">bash — غير متصل</span>
+                                    <span class="term-tag-badge">Ubuntu Linux / x86_64</span>
+                                </div>
+
+                                <!-- Terminal Quick Tools -->
+                                <div class="term-tools-group">
+                                    <button class="tool-btn" onclick="copyTerminalOutput()" title="نسخ محتوى التيرمينال">
+                                        📋 <span>نسخ</span>
+                                    </button>
+                                    <button class="tool-btn" onclick="downloadTerminalLog()" title="تصدير السجل كملف">
+                                        ⬇️ <span>تصدير</span>
+                                    </button>
+                                    <button class="tool-btn" onclick="zoomTerminal(-1)" title="تصغير الخط">A-</button>
+                                    <button class="tool-btn" onclick="zoomTerminal(1)" title="تكبير الخط">A+</button>
+                                    <button class="tool-btn" onclick="clearTerminal()" title="مسح الشاشة (Ctrl+L)">
+                                        🧹 <span>مسح</span>
+                                    </button>
+                                    <button class="tool-btn" onclick="toggleFullscreen()" title="ملء الشاشة">⛶</button>
+                                    <button class="tool-btn highlight" id="btnDockToggle" onclick="toggleCopilotDock()" title="إظهار/إخفاء الكوبيلوت">
+                                        <span id="dockToggleText">◫ الكوبيلوت</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Terminal Monospace Screen (Pure Stream) -->
+                            <div class="term-stream-screen" id="termScreen" dir="ltr">
+                                <!-- Streamed commands and output will appear here -->
+                            </div>
+
+                            <!-- Interactive CLI Prompt Line (At Terminal Bottom) -->
+                            <div class="term-interactive-cli" dir="ltr">
+                                <div class="cli-prompt-prefix" id="cliPromptPrefix">
+                                    <span class="prompt-user" id="cliUser">user</span><span class="prompt-at">@</span><span class="prompt-host" id="cliHost">server</span><span class="prompt-colon">:</span><span class="prompt-path" id="cliPath">~</span><span class="prompt-symbol" id="cliSymbol">$</span>
+                                </div>
+
+                                <div class="cli-input-box">
+                                    <input type="text" id="termInput" class="term-cli-input" 
+                                           placeholder="Type a Linux command (e.g. docker ps, free -h, ufw status)..." 
+                                           autocomplete="off" spellcheck="false" dir="ltr">
+                                </div>
+
+                                <!-- Sudo Toggle Switch -->
+                                <button class="sudo-toggle-btn" id="btnSudoToggle" onclick="toggleSudo()" title="تفعيل/تعطيل صلاحيات sudo">
+                                    <span class="sudo-tag">sudo</span>
+                                    <span class="sudo-indicator" id="sudoIndicator">OFF</span>
+                                </button>
+
+                                <button class="cli-execute-btn" onclick="executeManualCommand()" title="تنفيذ الأمر (Enter)">
+                                    <span>↵ Run</span>
+                                </button>
+                            </div>
+
+                            <!-- Terminal Status Bar -->
+                            <footer class="term-statusbar" dir="ltr">
+                                <div class="status-left">
+                                    <span class="status-dot-idle" id="footerDot"></span>
+                                    <span id="footerStatus">جاهز لاستقبال الأوامر</span>
+                                </div>
+                                <div class="status-right">
+                                    <span class="shortcut-tip"><kbd>Enter</kbd> Run</span>
+                                    <span class="shortcut-tip"><kbd>Tab</kbd> Autocomplete</span>
+                                    <span class="shortcut-tip"><kbd>Ctrl+L</kbd> Clear</span>
+                                    <span class="shortcut-tip"><kbd>↑/↓</kbd> History</span>
+                                    <span class="font-size-indicator" id="fontSizeIndicator">13px</span>
+                                </div>
+                            </footer>
+
+                        </div>
+                    </section>
+
+                    <!-- RIGHT: AI COPILOT DOCK (INTELLIGENT AGENT SIDEBAR) -->
+                    <aside class="copilot-dock" id="copilotDock">
+                        
+                        <!-- Dock Header -->
+                        <div class="dock-header">
+                            <div class="dock-title-group">
+                                <span class="dock-icon-neon">🤖</span>
+                                <div>
+                                    <h3 class="dock-heading">AssisSSH Copilot</h3>
+                                    <span class="dock-subheading" id="activeProviderBadge" title="الموديل النشط">🟢 Gemini 3.5</span>
+                                </div>
+                            </div>
+                            <div class="dock-header-actions">
+                                <span id="agentStatusPill" class="agent-state-pill idle">جاهز</span>
+                                <button class="dock-action-btn" onclick="openSessionsModal()" title="سجل الجلسات والمحادثات السابقة">📂 الجلسات</button>
+                                <button class="dock-action-btn" onclick="createNewSessionPrompt()" title="جلسة جديدة منفصلة">➕</button>
+                                <button class="dock-action-btn" onclick="resetWebSession()" title="تصفير الجلسة الحالية">🧹</button>
+                                <button class="dock-collapse-btn" onclick="toggleCopilotDock()" title="إخفاء الكوبيلوت">✕</button>
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar (Active when agent running) -->
+                        <div class="progress-bar-track" id="agentProgressBarTrack">
+                            <div class="progress-bar-fill" id="progressBar"></div>
+                        </div>
+
+                        <!-- Scrollable Feed Area -->
+                        <div class="copilot-feed" id="copilotFeed">
+                            
+                            <!-- Welcome / Starter Prompts Deck (Visible when idle) -->
+                            <div class="copilot-welcome-card" id="copilotWelcome">
+                                <div class="welcome-badge">⚡ مساعد السيرفر الذكي</div>
+                                <h4>كيف يمكنني مساعدتك؟</h4>
+                                <p>صف المشكلة أو اختر أحد التشخيصات السريعة أدناه وسيقوم الوكيل بفحص السيرفر وتنفيذ الحل تلقائياً.</p>
+
+                                <div class="quick-chips-grid">
+                                    <button class="diag-chip" onclick="runQuickDiag('افحص الدوكر وشغل الحاويات المتوقفة')">
+                                        <span class="chip-icon">🐳</span>
+                                        <div class="chip-content">
+                                            <strong>فحص حاويات Docker</strong>
+                                            <span>تشخيص وتشغيل الحاويات المتوقفة</span>
+                                        </div>
+                                    </button>
+                                    <button class="diag-chip" onclick="runQuickDiag('قم بعمل فحص شامل للسيرفر ولخص حالته وموارده')">
+                                        <span class="chip-icon">🩺</span>
+                                        <div class="chip-content">
+                                            <strong>فحص شامل للسيرفر</strong>
+                                            <span>تحليل المعالج والذاكرة والخدمات</span>
+                                        </div>
+                                    </button>
+                                    <button class="diag-chip" onclick="runQuickDiag('افحص مساحة التخزين ونظف الملفات المؤقتة ومخلفات الحزم')">
+                                        <span class="chip-icon">💾</span>
+                                        <div class="chip-content">
+                                            <strong>تنظيف مساحة التخزين</strong>
+                                            <span>إزالة مخلفات apt وملفات log القديمة</span>
+                                        </div>
+                                    </button>
+                                    <button class="diag-chip" onclick="runQuickDiag('افحص المنافذ المفتوحة والجدار الناري ufw وأمان السيرفر')">
+                                        <span class="chip-icon">🔒</span>
+                                        <div class="chip-content">
+                                            <strong>تدقيق المنافذ والحماية</strong>
+                                            <span>فحص المنافذ المفتوحة وحالة ufw</span>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Chat Messages Stream (Turns History) -->
+                            <div class="copilot-chat-stream" id="copilotChatStream"></div>
+
+                            <!-- Live AI Brain & Thought Stream (fallback) -->
+                            <div class="thought-stream-box" id="thoughtStream" style="display: none;"></div>
+
+                            <!-- Timeline Actions Stream (fallback) -->
+                            <div class="timeline-scroll-area" id="actionTimeline" style="display: none;"></div>
+
+                        </div>
+
+                        <!-- Pinned Input Area at Bottom (Composer Style) -->
+                        <div class="copilot-input-area">
+                            <div class="copilot-input-wrapper">
+                                <textarea id="goalInput" rows="2" 
+                                          placeholder="اكتب ما تريد تنفيذه أو اسأل عن أي مشكلة... (Enter للإرسال)" 
+                                          dir="auto"></textarea>
+                                
+                                <div class="copilot-input-toolbar">
+                                    <div class="toolbar-left">
+                                        <label class="switch-control-mini" title="البحث في الإنترنت عن حلول المشاكل وتوثيق الحزم">
+                                            <input type="checkbox" id="enableWebSearch" checked onchange="toggleWebSearchBadge(this)">
+                                            <span class="switch-slider-mini"></span>
+                                            <span class="switch-title-mini">🌐 بحث الويب</span>
+                                        </label>
+                                        <span id="stepCounter" class="step-counter-badge" style="display:none;">0/20</span>
+                                        <span id="actionCount" class="badge-pill-count" style="display:none;">0</span>
+                                    </div>
+                                    
+                                    <div class="toolbar-right">
+                                        <button id="startAgentBtn" class="btn-send-copilot" onclick="startAgent()" title="إرسال الطلب">
+                                            <span>بدء الحل</span> <span class="send-arrow">➔</span>
+                                        </button>
+                                        <button id="stopAgentBtn" class="btn-stop-copilot" onclick="stopAgent()" style="display:none;" title="إيقاف">
+                                            <span>⏹ إيقاف</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </aside>
+
+                </div>
+            </section>
+
+
+            <!-- ================================================================
+                 VIEW 2: DOCKER CONTAINERS & LIVE MONITORING DASHBOARD
+                 ================================================================ -->
+            <section class="view-panel" id="viewDashboard">
+                <div class="dashboard-scrollable-content">
+                    
+                    <div class="dash-header-row">
+                        <div class="dash-title-group">
+                            <h2 class="dash-heading">🐳 شبكة حاويات Docker ومراقبة السيرفر</h2>
+                            <p class="dash-sub">تحديث دوري لموارد السيرفر، استهلاك المعالج والذاكرة، وحالة الحاويات في الوقت الحقيقي</p>
+                        </div>
+                        <div class="dash-actions">
+                            <button class="dash-btn" onclick="refreshDashboard(true)" title="تحديث البيانات فوراً">
+                                🔄 <span>تحديث الآن</span>
+                            </button>
+                            <button class="dash-btn danger" onclick="confirmDockerPrune()" title="تنظيف الحاويات والصور غير المستخدمة">
+                                🧹 <span>تنظيف Docker Prune</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Metrics Grid (4 Main Cards) -->
+                    <div class="metrics-cards-grid">
+                        
+                        <!-- Card 1: RAM -->
+                        <div class="metric-card">
+                            <div class="card-icon-title">
+                                <span class="metric-icon neon-blue">🧠</span>
+                                <div>
+                                    <h4 class="metric-title">الذاكرة العشوائية (RAM)</h4>
+                                    <span class="metric-subtitle">الاستهلاك الفعلي للنظام</span>
+                                </div>
+                            </div>
+                            <div class="metric-value-row">
+                                <span class="metric-big-val" id="dashRamPercent">0%</span>
+                                <span class="metric-detail-txt" id="dashRamDetails">0 MB / 0 MB</span>
+                            </div>
+                            <div class="metric-progress-track">
+                                <div class="metric-progress-bar blue" id="dashRamBar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Disk -->
+                        <div class="metric-card">
+                            <div class="card-icon-title">
+                                <span class="metric-icon neon-purple">💾</span>
+                                <div>
+                                    <h4 class="metric-title">مساحة التخزين (Disk)</h4>
+                                    <span class="metric-subtitle">القسم الرئيسي (Root /)</span>
+                                </div>
+                            </div>
+                            <div class="metric-value-row">
+                                <span class="metric-big-val" id="dashDiskPercent">0%</span>
+                                <span class="metric-detail-txt" id="dashDiskDetails">0 GB / 0 GB</span>
+                            </div>
+                            <div class="metric-progress-track">
+                                <div class="metric-progress-bar purple" id="dashDiskBar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: CPU & Uptime -->
+                        <div class="metric-card">
+                            <div class="card-icon-title">
+                                <span class="metric-icon neon-amber">⏱️</span>
+                                <div>
+                                    <h4 class="metric-title">مدة التشغيل ومتوسط الحمل</h4>
+                                    <span class="metric-subtitle">Uptime & Load Average</span>
+                                </div>
+                            </div>
+                            <div class="metric-value-row">
+                                <span class="metric-big-val" id="dashLoadAvg">0.00</span>
+                                <span class="metric-detail-txt">Load Avg (1m, 5m, 15m)</span>
+                            </div>
+                            <div class="metric-footer-note">
+                                <span>🟢 مدة التشغيل:</span> <strong id="dashUptime">--</strong>
+                            </div>
+                        </div>
+
+                        <!-- Card 4: Docker Status -->
+                        <div class="metric-card">
+                            <div class="card-icon-title">
+                                <span class="metric-icon neon-emerald">🐳</span>
+                                <div>
+                                    <h4 class="metric-title">حاويات Docker</h4>
+                                    <span class="metric-subtitle">إجمالي وحالة الحاويات</span>
+                                </div>
+                            </div>
+                            <div class="metric-value-row">
+                                <span class="metric-big-val" id="dashDockerCount">0</span>
+                                <span class="metric-detail-txt" id="dashDockerRunningSummary">0 نشطة</span>
+                            </div>
+                            <div class="metric-footer-note">
+                                <span>💡 نصيحة:</span> <span>يمكنك إدارة وتشغيل الحاويات بضغطة زر أدناه.</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Docker Containers Grid Section -->
+                    <div class="docker-management-section">
+                        <div class="section-title-row">
+                            <div class="row-left">
+                                <span class="section-icon">🐳</span>
+                                <h3>شبكة حاويات Docker (Live Containers)</h3>
+                                <span class="containers-badge" id="containerCountBadge">0 حاوية</span>
+                            </div>
+                            <div class="row-right">
+                                <input type="text" id="dockerFilterInput" class="filter-search-input" 
+                                       placeholder="🔍 تصفية الحاويات بالاسم أو الصورة..." oninput="filterContainers(this.value)">
+                            </div>
+                        </div>
+
+                        <div class="containers-grid" id="containersGrid">
+                            <div class="containers-loading-placeholder">
+                                <span class="loading-spinner"></span>
+                                <p>جاري فحص حالة الحاويات من السيرفر...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+
+            <!-- ================================================================
+                 VIEW 3: AUDIT LOG & EXECUTION HISTORY
+                 ================================================================ -->
+            <section class="view-panel" id="viewAudit">
+                <div class="audit-scrollable-content">
+                    <div class="dash-header-row">
+                        <div class="dash-title-group">
+                            <h2 class="dash-heading">📜 سجل الأوامر والتدقيق الزمني (Audit Log)</h2>
+                            <p class="dash-sub">تتبع كل أمر تم تنفيذه على السيرفر بواسطة الذكاء الاصطناعي أو يدوياً مع أكواد الخروج</p>
+                        </div>
+                        <div class="dash-actions">
+                            <button class="dash-btn" onclick="clearAuditLog()">🧹 مسح السجل</button>
+                            <button class="dash-btn" onclick="exportAuditLog()">⬇️ تصدير JSON</button>
+                        </div>
+                    </div>
+
+                    <div class="audit-table-card">
+                        <table class="audit-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>المنفذ</th>
+                                    <th>الأمر المنفذ (Command)</th>
+                                    <th>النوع</th>
+                                    <th>الحالة (Exit Code)</th>
+                                    <th>التوقيت</th>
+                                    <th>إجراء</th>
+                                </tr>
+                            </thead>
+                            <tbody id="auditTableBody">
+                                <tr class="empty-row">
+                                    <td colspan="7">لا توجد أوامر مسجلة في السجل بعد.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ================================================================
+                 VIEW 4: SETTINGS & TELEGRAM BOT CONTROL
+                 ================================================================ -->
+            <section class="view-panel" id="viewSettings">
+                <div class="settings-scrollable-content">
+                    <div class="dash-header-row">
+                        <div class="dash-title-group">
+                            <h2 class="dash-heading">⚙️ إعدادات المنصة وحماية بوت التليجرام</h2>
+                            <p class="dash-sub">إدارة خيارات الذكاء الاصطناعي، أمان الحساب، ومفاتيح النظام</p>
+                        </div>
+                    </div>
+
+                    <div class="settings-grid">
+                        
+                        <!-- Telegram Bot Security Card -->
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <span class="sec-icon">📱</span>
+                                <div>
+                                    <h3>بوت تليجرام الذكي (Telegram DevOps Bot)</h3>
+                                    <p>حماية مشددة: البوت مشفر ومخصص حصرياً لحسابك</p>
+                                </div>
+                                <span class="status-shield-badge active">🛡️ محمي</span>
+                            </div>
+
+                            <div class="settings-card-body">
+                                <div class="info-row">
+                                    <span class="info-label">المستخدم المصرح له الوحيد:</span>
+                                    <span class="info-value-tag highlight">@Yahya_el_hamzawy</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">حالة البوت:</span>
+                                    <span class="info-value-tag active">🟢 يعمل في الخلفية (Live Polling)</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">نظام الردع:</span>
+                                    <span class="info-desc">أي مستخدم غير مصرح له يتم حظره تلقائياً فوراً وإرسال إشعار فوري بحسابه إلى تليجرامك.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AI Model & Capabilities -->
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <span class="sec-icon">🧠</span>
+                                <div>
+                                    <h3>محرك الذكاء الاصطناعي (Gemini Core)</h3>
+                                    <p>إعدادات الموديل ومعالجة المهام والأدوات</p>
+                                </div>
+                            </div>
+
+                            <div class="settings-card-body">
+                                <div class="info-row">
+                                    <span class="info-label">الموديل الفعال:</span>
+                                    <span class="info-value-tag code">models/gemini-3.5-flash-lite</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">محرك البحث الحي (Web Search):</span>
+                                    <span class="info-value-tag">DuckDuckGo DDGS Core</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">الحد الأقصى للخطوات الحالي:</span>
+                                    <span class="info-value-tag highlight" id="infoMaxStepsTag">20 خطوة (الافتراضي)</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">سياق الجلسات (Context Retention):</span>
+                                    <span class="info-value-tag">مُفعل تلقائياً (Sliding Memory Window)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Agent Execution & Max Steps Control Card -->
+                        <div class="settings-card steps-settings-card">
+                            <div class="settings-card-header">
+                                <span class="sec-icon">⚡</span>
+                                <div>
+                                    <h3>التحكم في عمق الحل وعدد المحاولات (Max Steps)</h3>
+                                    <p>تحديد الحد الأقصى لعدد الخطوات والأوامر في كل مهمة</p>
+                                </div>
+                                <span class="status-shield-badge steps-badge" id="settingsStepsBadge">20 خطوة</span>
+                            </div>
+
+                            <div class="settings-card-body">
+                                <div class="setting-control-box">
+                                    <div class="setting-title-row">
+                                        <div class="setting-desc-wrap">
+                                            <strong class="setting-title">أقصى عدد للخطوات والمحاولات لكل مهمة (Max Steps Limit)</strong>
+                                            <p class="setting-desc">
+                                                يحدد أقصى عدد من خطوات التفكير وأوامر التشخيص والإصلاح التي ينفذها الذكاء الاصطناعي تلقائياً للوصول للهدف وحل المشكلة.
+                                                <br>
+                                                <strong>القيمة الافتراضية للنظام هي 20 خطوة</strong>، ويمكنك رفعها حتى 100 خطوة للمهام الطويلة أو المعقدة لتجنب توقف الوكيل قبل إتمام الحل.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="steps-interactive-panel">
+                                        <div class="steps-input-row">
+                                            <div class="steps-number-wrapper">
+                                                <input type="number" id="settingMaxSteps" class="steps-number-input" min="5" max="100" value="20" step="1">
+                                                <span class="steps-unit-label">خطوة</span>
+                                            </div>
+
+                                            <!-- Preset chips -->
+                                            <div class="steps-presets-group">
+                                                <button type="button" class="preset-chip active" data-steps="20" onclick="applyPresetSteps(20)">20 (الافتراضي)</button>
+                                                <button type="button" class="preset-chip" data-steps="35" onclick="applyPresetSteps(35)">35 (متوسط)</button>
+                                                <button type="button" class="preset-chip" data-steps="50" onclick="applyPresetSteps(50)">50 (مهام مركبة)</button>
+                                                <button type="button" class="preset-chip" data-steps="100" onclick="applyPresetSteps(100)">100 (أقصى عمق)</button>
+                                            </div>
+
+                                            <button type="button" class="btn-save-steps" onclick="saveMaxStepsFromInput()">
+                                                <span>💾</span> <span>حفظ وتطبيق</span>
+                                            </button>
+                                        </div>
+
+                                        <div class="steps-recommendation-note">
+                                            <span class="note-icon">💡</span>
+                                            <span class="note-text">
+                                                <strong>نصيحة عملية:</strong>
+                                                للفحوصات السريعة ومراقبة السيرفر يكفي <strong>20 خطوة</strong>. 
+                                                أما للمهام المركبة (مثل تنصيب برامج معقدة، حل تعارض منافذ، أو إعداد حاويات Docker جديدة) ننصح باختيار <strong>35 إلى 50 خطوة</strong> ليعطي الوكيل مساحة كافية لتجربة الحلول دون انقطاع.
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- ====================================================================
+             MODALS & OVERLAYS
+             ==================================================================== -->
+
+        <!-- 1. SSH Server Connection Modal -->
+        <div class="modal-backdrop" id="connModal">
+            <div class="modal-dialog glassmorphic">
+                <div class="modal-header">
+                    <div class="header-title-flex">
+                        <span class="modal-icon">🔗</span>
+                        <h3>إعدادات الاتصال بالسيرفر (SSH)</h3>
+                    </div>
+                    <button class="modal-close-btn" onclick="closeConnModal()">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label for="cfgHost">عنوان السيرفر (IP أو Hostname):</label>
+                            <input type="text" id="cfgHost" placeholder="مثال: 192.168.100.4 أو myserver.com" dir="ltr">
+                        </div>
+                        <div class="form-group port-group">
+                            <label for="cfgPort">المنفذ (Port):</label>
+                            <input type="number" id="cfgPort" value="22" dir="ltr">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cfgUser">اسم المستخدم (User):</label>
+                        <input type="text" id="cfgUser" placeholder="مثال: ubuntu أو root أو yy" dir="ltr">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cfgPass">كلمة سر SSH:</label>
+                        <input type="password" id="cfgPass" placeholder="••••••••••••" dir="ltr">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cfgSudo">كلمة سر Sudo (اختياري، إن كانت مختلفة):</label>
+                        <input type="password" id="cfgSudo" placeholder="تترك فارغة إذا كانت نفس كلمة السر" dir="ltr">
+                    </div>
+
+                    <div class="checkbox-field">
+                        <input type="checkbox" id="cfgRemember" checked />
+                        <label for="cfgRemember">حفظ بيانات السيرفر في المتصفح محلياً لسهولة الاتصال لاحقاً</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" onclick="closeConnModal()">إلغاء</button>
+                    <button class="btn-connect" id="modalConnectBtn" onclick="performConnect()">
+                        <span>⚡</span> اتصال الآن
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Docker Logs Modal -->
+        <div class="modal-backdrop" id="dockerLogsModal">
+            <div class="modal-dialog modal-lg glassmorphic">
+                <div class="modal-header">
+                    <div class="header-title-flex">
+                        <span class="modal-icon">📜</span>
+                        <h3 id="dockerLogsTitle">سجل الحاوية (Container Logs)</h3>
+                    </div>
+                    <div class="header-actions-flex">
+                        <button class="btn-secondary-mini" onclick="copyDockerLogs()">📋 نسخ</button>
+                        <button class="btn-secondary-mini" onclick="refreshCurrentDockerLogs()">🔄 تحديث</button>
+                        <button class="modal-close-btn" onclick="closeDockerLogsModal()">✕</button>
+                    </div>
+                </div>
+                <div class="modal-body p-0">
+                    <pre class="logs-viewer-pre" id="dockerLogsContent" dir="ltr">جاري تحميل السجلات...</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Command Palette Modal (Ctrl + K) -->
+        <div class="modal-backdrop" id="commandPaletteModal">
+            <div class="palette-dialog glassmorphic">
+                <div class="palette-input-wrap">
+                    <span class="palette-search-icon">🔍</span>
+                    <input type="text" id="paletteInput" class="palette-input" 
+                           placeholder="اكتب أمراً أو ابحث عن تشخيص... (مثال: docker, restart, فحص, new)" 
+                           oninput="filterPalette(this.value)">
+                    <kbd class="palette-esc-tip">ESC</kbd>
+                </div>
+                <div class="palette-results-list" id="paletteResults">
+                    <!-- Palette items rendered here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Sessions History Modal / Drawer -->
+        <div class="modal-backdrop" id="sessionsModal">
+            <div class="modal-dialog modal-md glassmorphic">
+                <div class="modal-header">
+                    <div class="header-title-flex">
+                        <span class="modal-icon">📂</span>
+                        <div>
+                            <h3 style="margin: 0;">سجل الجلسات والمحادثات</h3>
+                            <span style="font-size: 11px; color: var(--text-muted);">جلسات محفوظة تلقائياً مع كامل سياقها وأوامرها</span>
+                        </div>
+                    </div>
+                    <div class="header-actions-flex">
+                        <button class="btn-connect-mini" onclick="createNewSessionPrompt()">➕ جلسة جديدة</button>
+                        <button class="modal-close-btn" onclick="closeSessionsModal()">✕</button>
+                    </div>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="sessions-search-wrap">
+                        <span class="sessions-search-icon">🔍</span>
+                        <input type="text" id="sessionSearchInput" class="sessions-search-input" 
+                               placeholder="ابحث في عناوين الجلسات..." oninput="filterSessionsList(this.value)">
+                    </div>
+                    <div class="sessions-list-container" id="sessionsListContainer">
+                        <div class="sessions-empty-state">جاري تحميل الجلسات...</div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="justify-content: space-between;">
+                    <span class="sessions-footer-tip">💡 يتم الاحتفاظ بجميع الأوامر والتحليلات تلقائياً</span>
+                    <button class="btn-secondary" onclick="closeSessionsModal()">إغلاق</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Toast Notifications -->
+        <div class="toast-container" id="toastContainer"></div>
+
+    </div>
+
+    <script src="/static/marked.min.js"></script>
+    <script src="/static/app.js?v=4.0"></script>
+</body>
+</html>

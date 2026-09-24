@@ -1,0 +1,28 @@
+# Secrets & Environment Variables (NEVER COMMIT)
+.env
+.env.*
+!.env.example
+
+# Authentication & Sensitive Server Credentials
+.saved_ssh.json
+.telegram_auth.json
+.settings.json
+
+# Session Logs & Execution History
+sessions/*.json
+!sessions/.gitkeep
+
+# Python Cache & Virtual Environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+ENV/
+env/
+
+# Logs & Temporary Files
+*.log
+.DS_Store
+Thumbs.db
